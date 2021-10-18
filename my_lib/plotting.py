@@ -4,8 +4,19 @@ import matplotlib.pyplot as plt
 
 COLORS = {'train': 'b', 'test': 'r'}
 
+def plot_feature_importance(feature_importances, columns, ax=None, **kwargs):
 
-def plot_validation_curve(train_scores, test_scores, train_sizes, expected_score=None, ax=None, stat_error=True):
+    if ax is None:
+        ax = plt.gca()
+
+    ax.bar(range(len(feature_importances)), feature_importances, **kwargs)
+
+    ax.set_xticks(range(len(feature_importances)))
+    ax.set_xticklabels(list(columns), rotation=90)
+
+    return ax
+
+def plot_learning_curve(train_scores, test_scores, train_sizes, expected_score=None, ax=None, stat_error=True):
 
     ax = _plot_generic_curve(
         train_scores=train_scores,
@@ -19,8 +30,12 @@ def plot_validation_curve(train_scores, test_scores, train_sizes, expected_score
     ax.set_ylabel('score')
     ax.set_xlabel('training sample size')
 
+    test_score, test_score_error = _get_test_score(test_scores, stat_error=stat_error)
 
-def plot_learning_curve(train_scores, test_scores, param_range, expected_score=None, ax=None, stat_error=True):
+    return test_score, test_score_error
+
+
+def plot_validation_curve(train_scores, test_scores, param_range, expected_score=None, ax=None, stat_error=True):
 
     ax = _plot_generic_curve(
         train_scores=train_scores,
@@ -37,7 +52,7 @@ def plot_learning_curve(train_scores, test_scores, param_range, expected_score=N
 
 def _plot_generic_curve(train_scores, test_scores, x_pars, expected_score=None, ax=None, stat_error=True):
     train_score_mean, train_score_error, test_score_mean, test_score_error = \
-        get_score_means_and_errors(train_scores, test_scores, stat_error=stat_error)
+        _get_score_means_and_errors(train_scores, test_scores, stat_error=stat_error)
 
     if ax is None:
         ax = plt.gca()
@@ -86,8 +101,13 @@ def _plot_generic_curve(train_scores, test_scores, x_pars, expected_score=None, 
 
     return ax
 
+def _get_test_score(test_scores, stat_error=True):
+    _, _, test_score_mean, test_score_error = \
+        _get_score_means_and_errors(np.empty(shape=test_scores.shape), test_scores, stat_error=stat_error)
 
-def get_score_means_and_errors(train_scores, test_scores, stat_error=True):
+    return test_score_mean[-1], test_score_error[-1]
+
+def _get_score_means_and_errors(train_scores, test_scores, stat_error=True):
     train_score_mean = np.mean(train_scores, axis=1)
     test_score_mean = np.mean(test_scores, axis=1)
 
@@ -101,7 +121,26 @@ def get_score_means_and_errors(train_scores, test_scores, stat_error=True):
     return train_score_mean, train_score_error, test_score_mean, test_score_error
 
 
-def plot_probability_distributions(clf, X, y):
+def plot_probability_distributions(clf, X, y, ax=None):
+
+    if ax is None:
+        ax = plt.gca()
+
     prob = clf.predict_proba(X)
-    plt.hist([p for p, y in zip(prob[:,0], y) if y == 0], bins=np.linspace(0, 1, 25), alpha=0.6, color='r')
-    plt.hist([p for p, y in zip(prob[:,0], y) if y == 1], bins=np.linspace(0, 1, 25), alpha=0.6, color='b')
+    ax.hist(
+        [p for p, y in zip(prob[:,0], y) if y == 0],
+        bins=np.linspace(0, 1, 25),
+        alpha=0.6,
+        color='r',
+        label='positive examples'
+    )
+    ax.hist(
+        [p for p, y in zip(prob[:,0], y) if y == 1],
+        bins=np.linspace(0, 1, 25),
+        alpha=0.6,
+        color='b',
+        label='negative examples'
+    )
+
+    ax.set_xlabel('probability of positive assignment')
+    ax.legend()

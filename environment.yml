@@ -8,6 +8,7 @@ dependencies:
   - jupyter
   - ipython
   - scikit-learn
+  - jupyterthemes
   
 # cheatsheet
 # create: conda env create -f environment.yml
