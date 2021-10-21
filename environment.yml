@@ -9,6 +9,7 @@ dependencies:
   - ipython
   - scikit-learn
   - jupyterthemes
+  - seaborn
   
 # cheatsheet
 # create: conda env create -f environment.yml
